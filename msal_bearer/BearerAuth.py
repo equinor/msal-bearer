@@ -2,7 +2,6 @@ import os
 from typing import List, Union
 
 import msal
-import requests
 from msal_extensions import (
     build_encrypted_persistence,
     PersistedTokenCache,
@@ -21,8 +20,7 @@ def get_login_name() -> Union[str, None]:
             return os.getenv(name)
 
 
-def get_app_with_cache(
-    client_id, authority: str, token_location: str = ""):
+def get_app_with_cache(client_id, authority: str, token_location: str = ""):
     """Get msal PublicClientApplication to authenticate against, with cached token if available.
 
     Args:
@@ -42,6 +40,7 @@ def get_app_with_cache(
         client_id=client_id, authority=authority, token_cache=cache
     )
 
+
 def get_tenant_authority(tenant_id: str) -> str:
     """Get url to default authority to authenticate against.
 
@@ -53,7 +52,8 @@ def get_tenant_authority(tenant_id: str) -> str:
     """
     return f"https://login.microsoftonline.com/{tenant_id}"
 
-class BearerAuth(requests.auth.AuthBase):
+
+class BearerAuth:
     """Class for getting bearer token authentication using msal.
 
     Get BearerAuth object by calling get_bearer_token.
@@ -75,7 +75,7 @@ class BearerAuth(requests.auth.AuthBase):
         clientID: str,
         scopes: List[str],
         username: str = "",
-        token_location = "",
+        token_location: str = "",
         authority: str = "",
         verbose: bool = False,
     ):
@@ -101,7 +101,8 @@ class BearerAuth(requests.auth.AuthBase):
 
         # Try to get Access Token silently from cache
         app = get_app_with_cache(
-            client_id=clientID, authority=authority, token_location=token_location)
+            client_id=clientID, authority=authority, token_location=token_location
+        )
         accounts = app.get_accounts(username=username)
         if accounts:
             if verbose:
