@@ -5,6 +5,7 @@ import msal
 from msal_extensions import (
     build_encrypted_persistence,
     PersistedTokenCache,
+    # PersistenceDecryptionError
 )
 
 _token_location = "token_cache.bin"
@@ -118,10 +119,9 @@ class BearerAuth:
         """
         if authority is None or (isinstance(authority, str) and len(authority) == 0):
             authority = get_tenant_authority(tenant_id=tenantID)
-        result = None
 
+        result = None
         accounts = None
-        print(_token_location)
 
         try:
             # Try to get Access Token silently from cache
@@ -130,7 +130,13 @@ class BearerAuth:
             )
             accounts = app.get_accounts(username=username)
         except Exception as ex:
-            os.remove(_token_location)
+            # PersistenceDecryptionError
+            if os.path.isfile(_token_location):
+                if verbose:
+                    print(
+                        f"Failed getting accounts from app with cache. Attempts to delete cache-file at {_token_location}"
+                    )
+                os.remove(_token_location)
             app = get_app_with_cache(
                 client_id=clientID, authority=authority, token_location=token_location
             )
@@ -140,9 +146,7 @@ class BearerAuth:
             if verbose:
                 print(f"Found account in token cache: {username}")
                 print("Attempting to obtain a new Access Token using the Refresh Token")
-            result = app.acquire_token_silent_with_error(
-                scopes=scopes, account=accounts[0]
-            )
+            result = app.acquire_token_silent(scopes=scopes, account=accounts[0])
 
         if result is None or (
             isinstance(result, dict)
