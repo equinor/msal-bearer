@@ -7,6 +7,20 @@ from msal_extensions import (
     PersistedTokenCache,
 )
 
+_token_location = "token_cache.bin"
+
+
+def set_token_location(location: str):
+    global _token_location
+
+    if isinstance(location, str):
+        if len(location) > 5:
+            _token_location = location
+        else:
+            raise ValueError(f"Invalid location string {location}")
+    else:
+        raise TypeError("Input location shall be a string.")
+
 
 def get_login_name() -> Union[str, None]:
     """Get login name of current user.
@@ -26,14 +40,21 @@ def get_app_with_cache(client_id, authority: str, token_location: str = ""):
     Args:
         client_id (str): Azure Client ID to request token from.
         authority (str): Authority to authenticate against. Should be like f"https://login.microsoftonline.com/{tenantID}".
-        token_location (str, optional): Location of token persistance file. Defaults to "".
+        token_location (str, optional): Location of token persistance file.
+                Defaults to "" which uses previously set value or "token_cache.bin" if not yet set. it has not been set at all, it will .
 
     Returns:
         msal.PublicClientApplication: Application object to authenticate with.
     """
-    if token_location is None or len(token_location) == 0:
-        token_location = "token_cache.bin"
-    persistence = build_encrypted_persistence(token_location)
+
+    if isinstance(token_location, str) and len(token_location) > 0:
+        set_token_location(token_location)
+    else:
+        # if verbose:
+        # Uses default token location
+        pass
+
+    persistence = build_encrypted_persistence(_token_location)
 
     cache = PersistedTokenCache(persistence)
     return msal.PublicClientApplication(
@@ -85,7 +106,7 @@ class BearerAuth:
             tenantID (str): Azure tenant ID.
             clientID (str): Azure app client ID to request token from.
             scopes (List[str]): Scopes to get token for.
-            username (str, optional): User name to authenticate. Defaults to f"{get_login_name()}@equinor.com".
+            username (str, optional): User name to authenticate. Defaults to "".".
             authority (str, optional): Authenticator. Defaults to "", which converts to f"https://login.microsoftonline.com/{tenantID}".
             verbose (bool, optional): Set true to print messages. Defaults to False.
 
@@ -99,11 +120,22 @@ class BearerAuth:
             authority = get_tenant_authority(tenant_id=tenantID)
         result = None
 
-        # Try to get Access Token silently from cache
-        app = get_app_with_cache(
-            client_id=clientID, authority=authority, token_location=token_location
-        )
-        accounts = app.get_accounts(username=username)
+        accounts = None
+        print(_token_location)
+
+        try:
+            # Try to get Access Token silently from cache
+            app = get_app_with_cache(
+                client_id=clientID, authority=authority, token_location=token_location
+            )
+            accounts = app.get_accounts(username=username)
+        except Exception as ex:
+            os.remove(_token_location)
+            app = get_app_with_cache(
+                client_id=clientID, authority=authority, token_location=token_location
+            )
+            accounts = app.get_accounts(username=username)
+
         if accounts:
             if verbose:
                 print(f"Found account in token cache: {username}")
