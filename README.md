@@ -1,4 +1,6 @@
 # msal-bearer
+[![SCM Compliance](https://scm-compliance-api.radix.equinor.com/repos/equinor/msal-bearer/badge)](https://scm-compliance-api.radix.equinor.com/repos/equinor/msal-bearer/badge)
+
 Python package to get auth token interactively for a msal public client application and cache it locally.
 
 ## Usage
