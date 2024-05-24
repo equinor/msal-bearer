@@ -5,22 +5,39 @@ import msal
 from msal_extensions import (
     build_encrypted_persistence,
     PersistedTokenCache,
-    # PersistenceDecryptionError
 )
 
 _token_location = "token_cache.bin"
 
 
 def set_token_location(location: str):
+    """Setter for token location
+
+    Args:
+        location (str): Where to set
+
+    Raises:
+        ValueError: If input location is not a valid path.
+        TypeError: If input location is not string.
+    """
     global _token_location
 
     if isinstance(location, str):
-        if len(location) > 5:
+        if len(location) > 4 and "." in location:
             _token_location = location
         else:
             raise ValueError(f"Invalid location string {location}")
     else:
         raise TypeError("Input location shall be a string.")
+
+
+def get_token_location() -> str:
+    """Getter for token location.
+
+    Returns:
+        str: Token location (pathlike)
+    """
+    return _token_location
 
 
 def get_login_name() -> Union[str, None]:
@@ -55,7 +72,7 @@ def get_app_with_cache(client_id, authority: str, token_location: str = ""):
         # Uses default token location
         pass
 
-    persistence = build_encrypted_persistence(_token_location)
+    persistence = build_encrypted_persistence(get_token_location())
 
     cache = PersistedTokenCache(persistence)
     return msal.PublicClientApplication(
@@ -124,13 +141,15 @@ class BearerAuth:
         accounts = None
 
         try:
+            if not token_location:
+                token_location = get_token_location()
+
             # Try to get Access Token silently from cache
             app = get_app_with_cache(
                 client_id=clientID, authority=authority, token_location=token_location
             )
             accounts = app.get_accounts(username=username)
         except Exception as ex:
-            # PersistenceDecryptionError
             if os.path.isfile(_token_location):
                 if verbose:
                     print(

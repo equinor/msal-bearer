@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "msal-bearer"
-version = "0.2.1"
+version = "1.0.0"
 description = "Python package to get auth token interactively for a public client application using msal and msal-extension for caching."
 authors = [
     "Åsmund Våge Fannemel <asmf@equinor.com>",
@@ -12,11 +12,13 @@ classifiers = ["Operating System :: OS Independent"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-msal = "^1.26.0"
+msal = "^1.28.0"
 msal-extensions = "^1.1.0"
+cryptography = "^42.0.6"
+
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.12.1"
+black = "^24.4.2"
 
 [build-system]
 requires = ["poetry-core"]
