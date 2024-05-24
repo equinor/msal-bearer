@@ -1,15 +1,17 @@
 # msal-bearer
-Python package to get auth token interactively for a msal public client application and cache it locally.
+Python package to get authorization token interactively for a msal public client application supporting local cache and refreshing the token.
 
 ## Usage
 
 
 ````
+from msal_bearer.BearerAuth import BearerAuth
+
 tenantID = "YOUR_TENANT_ID"
 client_id = "YOUR_CLIENT_ID"
 scope = ["YOUR_SCOPE"]
 
-auth = BearerAuth.get_bearer_token_auth(
+auth = BearerAuth.get_auth(
     tenantID=tenantID,
     clientID=client_id,
     scopes=scope
@@ -24,11 +26,9 @@ response = client.get("https://www.example.com/", auth=auth)
 
 ````
 
-THe auth object can be used as an auth for both requests and httpx.
-
 
 ## Installing
-Install using pip or poetry from pypi.
+Clone and install using poetry or install from pypi using pip. 
 
 ````
 pip install msal_bearer

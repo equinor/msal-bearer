@@ -95,7 +95,7 @@ def get_tenant_authority(tenant_id: str) -> str:
 class BearerAuth:
     """Class for getting bearer token authentication using msal.
 
-    Get BearerAuth object by calling get_bearer_token.
+    Get BearerAuth object by calling get_auth.
     """
 
     def __init__(self, token):
@@ -117,19 +117,19 @@ class BearerAuth:
         token_location: str = "",
         authority: str = "",
         verbose: bool = False,
-    ):
+    ) -> "BearerAuth":
         """Get BearerAuth object interactively with access token for an azure application.
 
         Args:
             tenantID (str): Azure tenant ID.
-            clientID (str): Azure app client ID to request token from.
+            clientID (str): Public Azure app client ID to request token from.
             scopes (List[str]): Scopes to get token for.
-            username (str, optional): User name to authenticate. Defaults to "".".
+            username (str, optional): User name to authenticate. Defaults to "", which result in first account of app to be selected.".
             authority (str, optional): Authenticator. Defaults to "", which converts to f"https://login.microsoftonline.com/{tenantID}".
             verbose (bool, optional): Set true to print messages. Defaults to False.
 
         Raises:
-            Exception: Raises exception if not able to get token.
+            Exception: Raises exception if unable to get token.
 
         Returns:
             BearerAuth: Token bearing authenticator object.
