@@ -11,14 +11,14 @@ _token_location = "token_cache.bin"
 
 
 def set_token_location(location: str):
-    """Setter for token location
+    """Set location of token cache
 
     Args:
-        location (str): Where to set
+        location (str): Location of token cache file.
 
     Raises:
-        ValueError: If input location is not a valid path.
-        TypeError: If input location is not string.
+        ValueError: Raised if input location is not a valid location string.
+        TypeError: Raised if input location is not a string.
     """
     global _token_location
 
@@ -59,7 +59,7 @@ def get_app_with_cache(client_id, authority: str, token_location: str = ""):
         client_id (str): Azure Client ID to request token from.
         authority (str): Authority to authenticate against. Should be like f"https://login.microsoftonline.com/{tenantID}".
         token_location (str, optional): Location of token persistance file.
-                Defaults to "" which uses previously set value or "token_cache.bin" if not yet set. it has not been set at all, it will .
+                Defaults to "" which uses previously set value or "token_cache.bin" if not yet set.
 
     Returns:
         msal.PublicClientApplication: Application object to authenticate with.
