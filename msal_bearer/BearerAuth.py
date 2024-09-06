@@ -8,6 +8,7 @@ from msal_extensions import (
 )
 
 _token_location = "token_cache.bin"
+_username = ""
 
 
 def set_token_location(location: str):
@@ -38,6 +39,28 @@ def get_token_location() -> str:
         str: Token location (pathlike)
     """
     return _token_location
+
+
+def set_user_name(username: str):
+    """Set user name.
+
+    Args:
+        username (str): User name to use for user_impersonation
+    """
+    global _username
+    _username = username
+
+
+def get_user_name() -> Union[str, None]:
+    """Get user name if set using set_user_name or return result from get_login_name()
+
+    Returns:
+        Union[str, None]: User name
+    """
+    if not _username:
+        return get_login_name()
+
+    return _username
 
 
 def get_login_name() -> Union[str, None]:
