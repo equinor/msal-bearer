@@ -125,6 +125,7 @@ class BearerAuth:
             clientID (str): Public Azure app client ID to request token from.
             scopes (List[str]): Scopes to get token for.
             username (str, optional): User name to authenticate. Defaults to "", which result in first account of app to be selected.".
+            token_location (str, optional): Path to token cache. Defaults to "", which will call get_token_location().
             authority (str, optional): Authenticator. Defaults to "", which converts to f"https://login.microsoftonline.com/{tenantID}".
             verbose (bool, optional): Set true to print messages. Defaults to False.
 
