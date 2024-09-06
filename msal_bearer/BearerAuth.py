@@ -4,7 +4,8 @@ from typing import List, Union
 import msal
 from msal_extensions import (
     build_encrypted_persistence,
-    PersistedTokenCache,
+    FilePersistence,
+    PersistedTokenCache
 )
 
 _token_location = "token_cache.bin"
@@ -95,7 +96,11 @@ def get_app_with_cache(client_id, authority: str, token_location: str = ""):
         # Uses default token location
         pass
 
-    persistence = build_encrypted_persistence(get_token_location())
+    try:
+        persistence = build_encrypted_persistence(get_token_location())
+    except ImportError:
+        # Handle linux case of missing gi library
+        persistence = FilePersistence(get_token_location())
 
     cache = PersistedTokenCache(persistence)
     return msal.PublicClientApplication(
