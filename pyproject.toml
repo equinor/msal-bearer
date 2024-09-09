@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "msal-bearer"
-version = "1.1.1"
+version = "1.1.2"
 description = "Python package to get auth token interactively for a public client application using msal and msal-extension for caching."
 authors = ["Åsmund Våge Fannemel <asmf@equinor.com>"]
 license = "MIT"

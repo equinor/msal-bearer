@@ -2,10 +2,11 @@ import os
 from typing import List, Union
 
 import msal
+import msal.exceptions
 from msal_extensions import (
     build_encrypted_persistence,
     FilePersistence,
-    PersistedTokenCache
+    PersistedTokenCache,
 )
 
 _token_location = "token_cache.bin"
@@ -101,6 +102,9 @@ def get_app_with_cache(client_id, authority: str, token_location: str = ""):
     except ImportError:
         # Handle linux case of missing gi library
         persistence = FilePersistence(get_token_location())
+    except RuntimeError:
+        # Handle linux case of missing gi library
+        persistence = FilePersistence(get_token_location())
 
     cache = PersistedTokenCache(persistence)
     return msal.PublicClientApplication(
@@ -178,7 +182,7 @@ class BearerAuth:
                 client_id=clientID, authority=authority, token_location=token_location
             )
             accounts = app.get_accounts(username=username)
-        except Exception as ex:
+        except Exception:
             if os.path.isfile(_token_location):
                 if verbose:
                     print(
