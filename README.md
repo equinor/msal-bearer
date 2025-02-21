@@ -5,7 +5,7 @@ Python package to get authorization token interactively for a msal public client
 
 
 ````
-from msal_bearer.BearerAuth import BearerAuth
+from msal_bearer import BearerAuth
 
 tenantID = "YOUR_TENANT_ID"
 client_id = "YOUR_CLIENT_ID"
