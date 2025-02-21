@@ -13,6 +13,19 @@ _token_location = "token_cache.bin"
 _username = ""
 
 
+def get_token(tenant_id: str, client_id: str, scopes: List[str]) -> str:
+    """Get token for specified scopes for specified public Azure app registration.
+    Args:
+        tenant_id (str): Azure tenant ID.
+        client_id (str): Public Azure app client ID to request token from.
+        scopes (List[str]): Scopes to get token for.
+    Returns:
+        str: Token as string
+    """
+    b = BearerAuth.get_auth(tenantID=tenant_id, clientID=client_id, scopes=scopes)
+    return b.token
+
+
 def set_token_location(location: str):
     """Set location of token cache
 
