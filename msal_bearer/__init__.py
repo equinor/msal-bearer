@@ -1,5 +1,5 @@
 import logging
-from msal_bearer.BearerAuth import BearerAuth, get_user_name, get_token
+from msal_bearer.bearerauth import BearerAuth, get_user_name, get_token
 
 __all__ = ["BearerAuth", "get_user_name", "get_token"]
 

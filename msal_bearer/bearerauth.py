@@ -2,7 +2,6 @@ import os
 from typing import List, Union
 
 import msal
-import msal.exceptions
 from msal_extensions import (
     build_encrypted_persistence,
     FilePersistence,
@@ -15,10 +14,12 @@ _username = ""
 
 def get_token(tenant_id: str, client_id: str, scopes: List[str]) -> str:
     """Get token for specified scopes for specified public Azure app registration.
+
     Args:
         tenant_id (str): Azure tenant ID.
         client_id (str): Public Azure app client ID to request token from.
         scopes (List[str]): Scopes to get token for.
+
     Returns:
         str: Token as string
     """
@@ -105,10 +106,6 @@ def get_app_with_cache(client_id, authority: str, token_location: str = ""):
 
     if isinstance(token_location, str) and len(token_location) > 0:
         set_token_location(token_location)
-    else:
-        # if verbose:
-        # Uses default token location
-        pass
 
     try:
         persistence = build_encrypted_persistence(get_token_location())
@@ -143,7 +140,7 @@ class BearerAuth:
     Get BearerAuth object by calling get_auth.
     """
 
-    def __init__(self, token):
+    def __init__(self, token: Union[dict, str]):
         if isinstance(token, dict) and "access_result" in token:
             token = token["access_result"]
 
