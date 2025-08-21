@@ -62,8 +62,14 @@ def set_user_name(username: str):
 
     Args:
         username (str): User name to use for user_impersonation
+    Raises:
+        TypeError: Raises TypeError if input username is not string.
     """
     global _username
+
+    if not isinstance(username, str):
+        raise TypeError("Input username shall be a string.")
+
     _username = username
 
 
