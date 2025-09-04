@@ -200,6 +200,7 @@ class BearerAuth:
             app = get_app_with_cache(
                 client_id=clientID, authority=authority, token_location=token_location
             )
+            # User name must match including domain, if not caching will not work.
             accounts = app.get_accounts(username=username)
         except Exception:
             if os.path.isfile(get_token_location()):
