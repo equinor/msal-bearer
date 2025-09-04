@@ -1,7 +1,7 @@
 from azure.identity import DefaultAzureCredential
 from typing import List, Optional, Union
 
-from msal_bearer import BearerAuth, get_user_name
+from msal_bearer import BearerAuth
 from msal import ConfidentialClientApplication
 
 
@@ -23,6 +23,7 @@ class Authenticator:
         authority: Optional[str] = None,
         redirect_uri: Optional[str] = None,
         scopes: Optional[Union[str, List[str]]] = None,
+        user_name: Optional[str] = None,
     ):
         """Initializer for Authenticator class.
 
@@ -32,15 +33,27 @@ class Authenticator:
             client_secret (Optional[str], optional): _description_. Defaults to None.
             authority (Optional[str], optional): _description_. Defaults to None, which converts to f"https://login.microsoftonline.com/{tenant_id}".
             redirect_uri (Optional[str], optional): _description_. Defaults to None.
-            scopes (Optional[Union[str, List[str]]], optional): _description_. Defaults to None.
+            scopes (Optional[Union[str, List[str]]], optional): Scopes to fetch token for. Defaults to None, which will convert to client_id/.default.
+            user_name (Optional[str], optional): User name used for hinting during interactive login and checking for cache. Defaults to None.
         """
         self.tenant_id = tenant_id
-        self.client_id = client_id
-        self.client_secret = client_secret
-        self.authority = authority
+        if client_id is not None:
+            self.set_client_id(client_id)
+        else:
+            self.client_id = None
+
+        if client_secret is not None:
+            self.set_client_secret(client_secret)
+        else:
+            self.client_secret = None
+        
+        if authority is None and tenant_id is not None:
+            self.authority = f"https://login.microsoftonline.com/{tenant_id}"
+        else:
+            self.authority = None
         self.redirect_uri = redirect_uri
         self.token = ""
-        self.user_name = ""
+        self.user_name = user_name
         if scopes:
             self.set_scope(scopes)
         else:
@@ -86,7 +99,7 @@ class Authenticator:
             c = ConfidentialClientApplication(
                 client_id=self.get_client_id(),
                 client_credential=self.client_secret,
-                authority=f"https://login.microsoftonline.com/{self.get_tenant_id()}",
+                authority=self.authority,
             )
             d = c.acquire_token_for_client(scopes=scopes)
             if d is None:
@@ -127,10 +140,16 @@ class Authenticator:
         if username is not None:
             username = username.upper()
 
+        if scope is None:
+            scope = self.get_scope()
+
+        if isinstance(scope, str):
+            scope = [scope]
+
         auth = BearerAuth.get_auth(
             tenantID=self.get_tenant_id(),
             clientID=self.get_client_id(),
-            scopes=self.get_scope(),
+            scopes=scope,
             username=username,
         )
         return auth.token  # type: ignore
