@@ -1,5 +1,5 @@
 import os
-from typing import List, Union
+from typing import List, Optional, Union
 
 import msal
 from msal_extensions import (
@@ -85,16 +85,19 @@ def get_user_name() -> Union[str, None]:
     return _username
 
 
-def get_login_name() -> Union[str, None]:
+def get_login_name() -> str:
     """Get login name of current user.
 
     Returns:
-        Union[str, None]: Login name or None
+        str: Login name or empty string if not found.
     """
     env_names = ["LOGNAME", "USER", "LNAME", "USERNAME"]
     for name in env_names:
-        if os.getenv(name) is not None:
-            return os.getenv(name)
+        tmpName = os.getenv(name)
+        if tmpName is not None:
+            return tmpName
+
+    return ""
 
 
 def get_app_with_cache(client_id, authority: str, token_location: str = ""):
@@ -153,7 +156,7 @@ class BearerAuth:
         self.token = token
 
     def __call__(self, r):
-        r.headers["authorization"] = "Bearer " + self.token
+        r.headers["authorization"] = f"Bearer {self.token}"
         return r
 
     @staticmethod
@@ -161,10 +164,10 @@ class BearerAuth:
         tenantID: str,
         clientID: str,
         scopes: List[str],
-        username: str = "",
-        token_location: str = "",
-        authority: str = "",
-        verbose: bool = False,
+        username: Optional[str] = "",
+        token_location: Optional[str] = "",
+        authority: Optional[str] = "",
+        verbose: Optional[bool] = False,
     ) -> "BearerAuth":
         """Get BearerAuth object interactively with access token for an azure application.
 
@@ -189,22 +192,22 @@ class BearerAuth:
         result = None
         accounts = None
 
-        try:
-            if not token_location:
-                token_location = get_token_location()
+        if not token_location:
+            token_location = get_token_location()
 
+        try:
             # Try to get Access Token silently from cache
             app = get_app_with_cache(
                 client_id=clientID, authority=authority, token_location=token_location
             )
             accounts = app.get_accounts(username=username)
         except Exception:
-            if os.path.isfile(_token_location):
+            if os.path.isfile(get_token_location()):
                 if verbose:
                     print(
-                        f"Failed getting accounts from app with cache. Attempts to delete cache-file at {_token_location}"
+                        f"Failed getting accounts from app with cache. Attempts to delete cache-file at {get_token_location()}"
                     )
-                os.remove(_token_location)
+                os.remove(get_token_location())
             app = get_app_with_cache(
                 client_id=clientID, authority=authority, token_location=token_location
             )
