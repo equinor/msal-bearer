@@ -1,5 +1,8 @@
+import datetime
+from azure.core.credentials import AccessToken
 from azure.identity import DefaultAzureCredential
-from typing import List, Optional, Union
+
+from typing import List, Literal, Optional, Union
 
 from msal_bearer import BearerAuth
 from msal import ConfidentialClientApplication
@@ -24,6 +27,7 @@ class Authenticator:
         redirect_uri: Optional[str] = None,
         scopes: Optional[Union[str, List[str]]] = None,
         user_name: Optional[str] = None,
+        client_obo_scope: Optional[str] = None,
     ):
         """Initializer for Authenticator class.
 
@@ -46,7 +50,7 @@ class Authenticator:
             self.set_client_secret(client_secret)
         else:
             self.client_secret = None
-        
+
         if authority is None and tenant_id is not None:
             self.authority = f"https://login.microsoftonline.com/{tenant_id}"
         else:
@@ -58,6 +62,17 @@ class Authenticator:
             self.set_scope(scopes)
         else:
             self.scopes = []
+
+        if client_obo_scope:
+            if "/" not in client_obo_scope:
+                client_obo_scope = f"{client_obo_scope}/.default"
+
+            if isinstance(client_obo_scope, str):
+                client_obo_scope = [client_obo_scope]
+
+            self.client_obo_scope = client_obo_scope
+        else:
+            self.client_obo_scope = None
 
     def set_client_id(self, client_id: str) -> None:
         self.client_id = client_id
@@ -88,14 +103,44 @@ class Authenticator:
             return [f"{self.get_client_id()}/.default"]
         return self.scopes
 
-    def get_token(self, scopes: Optional[List[str]] = None) -> str:
+    def get_auth_type(
+        self,
+    ) -> Literal["preset", "client_secret", "obo", "public_app", "azure"]:
         if self.token:
+            return "preset"
+        elif self.client_id:
+            if self.client_secret:
+                if self.client_obo_scope:
+                    return "obo"
+                else:
+                    return "client_secret"
+            else:
+                return "public_app"
+
+        # Not found, will try defaultazurecredentials,
+        # https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.defaultazurecredential?view=azure-python
+        return "azure"
+
+    def get_token(self, scopes: Optional[List[str]] = None) -> str:
+        """Get token for Authenticator object. Will detect the type of authentication and call submethods.
+
+        Args:
+            scopes (Optional[List[str]], optional): Scopes to fetch token for. Defaults to None, which will call self.get_scope()
+
+        Raises:
+            ValueError: _description_
+
+        Returns:
+            str: Authenticator token.
+        """
+        auth_type = self.get_auth_type()
+        if auth_type == "preset":
             return self.token
 
-        if scopes is None:
+        if scopes is None or len(scopes) == 0:
             scopes = self.get_scope()
 
-        if self.client_secret:
+        if auth_type in ["client_secret", "obo"]:
             c = ConfidentialClientApplication(
                 client_id=self.get_client_id(),
                 client_credential=self.client_secret,
@@ -106,14 +151,41 @@ class Authenticator:
                 raise ValueError("Could not get token.")
             if "access_token" not in d:
                 raise ValueError(
-                    f"Could not get token: {d.get('error_description') if 'error_description' in d else d.get('error')}"
+                    f"Could not get token: {d.get('error_description', d.get('error'))}"
                 )
-            return d["access_token"]
 
-        if self.client_id:
-            return self.get_public_app_token()
+            app_token = d["access_token"]
 
-        return self.get_az_token(self.get_scope())
+            if auth_type == "obo":
+                if self.client_obo_scope:
+                    obo_response = c.acquire_token_on_behalf_of(
+                        user_assertion=app_token, scopes=self.client_obo_scope
+                    )
+                if obo_response is None:
+                    raise ValueError("Could not get OBO token.")
+
+                if "access_token" in obo_response and "expires_in" in obo_response:
+                    expires_on = datetime.datetime.now() + datetime.timedelta(
+                        seconds=int(obo_response["expires_in"])
+                    )
+                    token = AccessToken(
+                        obo_response["access_token"], int(expires_on.timestamp())
+                    )
+                    app_token = token.token
+                else:
+                    error_description = obo_response.get(
+                        "error_description", "No error description provided"
+                    )
+                    raise Exception(
+                        f"Failed to acquire token via OBO: {error_description}"
+                    )
+
+            return app_token
+
+        elif auth_type == "public_app":
+            return self.get_public_app_token(scope=scopes)
+
+        return self.get_az_token(scope=scopes)
 
     def get_az_token(self, scope: Union[List[str], str]) -> str:
         """Getter for token uzing azure authentication.
@@ -137,6 +209,7 @@ class Authenticator:
         else:
             self.user_name = username
 
+        # User name is not required. There will be no token caching and login requires user input, but it will work.
         if username is not None:
             username = username.upper()
 
