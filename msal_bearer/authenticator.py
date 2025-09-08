@@ -1,3 +1,5 @@
+import datetime
+from azure.core.credentials import AccessToken
 from azure.identity import DefaultAzureCredential
 from typing import List, Literal, Optional, Union
 
@@ -24,6 +26,7 @@ class Authenticator:
         redirect_uri: Optional[str] = None,
         scopes: Optional[Union[str, List[str]]] = None,
         user_name: Optional[str] = None,
+        client_obo_scope: Optional[str] = None,
     ):
         """Initializer for Authenticator class.
 
@@ -59,6 +62,17 @@ class Authenticator:
         else:
             self.scopes = []
 
+        if client_obo_scope:
+            if "/" not in client_obo_scope:
+                client_obo_scope = f"{client_obo_scope}/.default"
+
+            if isinstance(client_obo_scope, str):
+                client_obo_scope = [client_obo_scope]
+
+            self.client_obo_scope = client_obo_scope
+        else:
+            self.client_obo_scope = None
+
     def set_client_id(self, client_id: str) -> None:
         self.client_id = client_id
 
@@ -90,12 +104,15 @@ class Authenticator:
 
     def get_auth_type(
         self,
-    ) -> Literal["preset", "client_secret", "public_app", "azure"]:
+    ) -> Literal["preset", "client_secret", "obo", "public_app", "azure"]:
         if self.token:
             return "preset"
         elif self.client_id:
             if self.client_secret:
-                return "client_secret"
+                if self.client_obo_scope:
+                    return "obo"
+                else:
+                    return "client_secret"
             else:
                 return "public_app"
 
@@ -122,7 +139,7 @@ class Authenticator:
         if scopes is None or len(scopes) == 0:
             scopes = self.get_scope()
 
-        if auth_type == "client_secret":
+        if auth_type in ["client_secret", "obo"]:
             c = ConfidentialClientApplication(
                 client_id=self.get_client_id(),
                 client_credential=self.client_secret,
@@ -135,7 +152,34 @@ class Authenticator:
                 raise ValueError(
                     f"Could not get token: {d.get('error_description', d.get('error'))}"
                 )
-            return d["access_token"]
+
+            app_token = d["access_token"]
+
+            if auth_type == "obo":
+                if self.client_obo_scope:
+                    obo_response = c.acquire_token_on_behalf_of(
+                        user_assertion=app_token, scopes=self.client_obo_scope
+                    )
+                if obo_response is None:
+                    raise ValueError("Could not get OBO token.")
+
+                if "access_token" in obo_response and "expires_in" in obo_response:
+                    expires_on = datetime.datetime.now() + datetime.timedelta(
+                        seconds=int(obo_response["expires_in"])
+                    )
+                    token = AccessToken(
+                        obo_response["access_token"], int(expires_on.timestamp())
+                    )
+                    app_token = token.token
+                else:
+                    error_description = obo_response.get(
+                        "error_description", "No error description provided"
+                    )
+                    raise Exception(
+                        f"Failed to acquire token via OBO: {error_description}"
+                    )
+
+            return app_token
         elif auth_type == "public_app":
             return self.get_public_app_token(scope=scopes)
 
