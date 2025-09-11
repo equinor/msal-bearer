@@ -1,5 +1,5 @@
 from azure.identity import DefaultAzureCredential
-from typing import List, Optional, Union
+from typing import List, Literal, Optional, Union
 
 from msal_bearer import BearerAuth
 from msal import ConfidentialClientApplication
@@ -88,14 +88,41 @@ class Authenticator:
             return [f"{self.get_client_id()}/.default"]
         return self.scopes
 
-    def get_token(self, scopes: Optional[List[str]] = None) -> str:
+    def get_auth_type(
+        self,
+    ) -> Literal["preset", "client_secret", "public_app", "azure"]:
         if self.token:
+            return "preset"
+        elif self.client_id:
+            if self.client_secret:
+                return "client_secret"
+            else:
+                return "public_app"
+
+        # Not found, will try defaultazurecredentials,
+        # https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.defaultazurecredential?view=azure-python
+        return "azure"
+
+    def get_token(self, scopes: Optional[List[str]] = None) -> str:
+        """Get token for Authenticator object. Will detect the type of authentication and call submethods.
+
+        Args:
+            scopes (Optional[List[str]], optional): Scopes to fetch token for. Defaults to None, which will call self.get_scope()
+
+        Raises:
+            ValueError: _description_
+
+        Returns:
+            str: Authenticator token.
+        """
+        auth_type = self.get_auth_type()
+        if auth_type == "preset":
             return self.token
 
         if scopes is None or len(scopes) == 0:
             scopes = self.get_scope()
 
-        if self.client_secret:
+        if auth_type == "client_secret":
             c = ConfidentialClientApplication(
                 client_id=self.get_client_id(),
                 client_credential=self.client_secret,
@@ -109,8 +136,7 @@ class Authenticator:
                     f"Could not get token: {d.get('error_description', d.get('error'))}"
                 )
             return d["access_token"]
-
-        if self.client_id:
+        elif auth_type == "public_app":
             return self.get_public_app_token(scope=scopes)
 
         return self.get_az_token(scope=scopes)
