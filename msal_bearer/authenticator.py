@@ -226,3 +226,22 @@ class Authenticator:
             username=username,
         )
         return auth.token  # type: ignore
+    
+    def get_context_token(headers: dict) -> str:
+        """
+        Extracts Bearer token from headers.
+        
+        Args:
+            headers (dict): A dictionary of headers with string keys and values.
+        
+        Returns:
+            str: The Bearer token (user_assertion).
+        """
+        auth_header = headers.get("Authorization") or headers.get("authorization")
+        if not auth_header:
+            raise ValueError("Authorization header missing")
+
+        if not auth_header.lower().startswith("bearer "):
+            raise ValueError("Authorization header must start with 'Bearer '")
+
+        return auth_header[7:].strip()
