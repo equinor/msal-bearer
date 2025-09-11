@@ -46,7 +46,7 @@ class Authenticator:
             self.set_client_secret(client_secret)
         else:
             self.client_secret = None
-        
+
         if authority is None and tenant_id is not None:
             self.authority = f"https://login.microsoftonline.com/{tenant_id}"
         else:
@@ -92,7 +92,7 @@ class Authenticator:
         if self.token:
             return self.token
 
-        if scopes is None:
+        if scopes is None or len(scopes) == 0:
             scopes = self.get_scope()
 
         if self.client_secret:
@@ -106,14 +106,14 @@ class Authenticator:
                 raise ValueError("Could not get token.")
             if "access_token" not in d:
                 raise ValueError(
-                    f"Could not get token: {d.get('error_description') if 'error_description' in d else d.get('error')}"
+                    f"Could not get token: {d.get('error_description', d.get('error'))}"
                 )
             return d["access_token"]
 
         if self.client_id:
-            return self.get_public_app_token()
+            return self.get_public_app_token(scope=scopes)
 
-        return self.get_az_token(self.get_scope())
+        return self.get_az_token(scope=scopes)
 
     def get_az_token(self, scope: Union[List[str], str]) -> str:
         """Getter for token uzing azure authentication.
@@ -137,6 +137,7 @@ class Authenticator:
         else:
             self.user_name = username
 
+        # User name is not required. There will be no token caching and login requires user input, but it will work.
         if username is not None:
             username = username.upper()
 
