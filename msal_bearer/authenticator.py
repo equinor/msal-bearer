@@ -1,7 +1,6 @@
 import datetime
 from azure.core.credentials import AccessToken
 from azure.identity import DefaultAzureCredential
-
 from typing import List, Literal, Optional, Union
 
 from msal_bearer import BearerAuth
@@ -181,7 +180,6 @@ class Authenticator:
                     )
 
             return app_token
-
         elif auth_type == "public_app":
             return self.get_public_app_token(scope=scopes)
 
