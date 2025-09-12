@@ -120,7 +120,7 @@ class Authenticator:
         # https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.defaultazurecredential?view=azure-python
         return "azure"
 
-    def get_token(self, scopes: Optional[List[str]] = None) -> str:
+    def get_token(self, scopes: Optional[List[str]] = None, user_assertion: Optional[str] = None) -> str:
         """Get token for Authenticator object. Will detect the type of authentication and call submethods.
 
         Args:
@@ -139,7 +139,7 @@ class Authenticator:
         if scopes is None or len(scopes) == 0:
             scopes = self.get_scope()
 
-        if auth_type in ["client_secret", "obo"]:
+        if auth_type == "client_secret":
             c = ConfidentialClientApplication(
                 client_id=self.get_client_id(),
                 client_credential=self.client_secret,
@@ -152,34 +152,26 @@ class Authenticator:
                 raise ValueError(
                     f"Could not get token: {d.get('error_description', d.get('error'))}"
                 )
+            return d["access_token"]
 
-            app_token = d["access_token"]
-
-            if auth_type == "obo":
-                if self.client_obo_scope:
-                    obo_response = c.acquire_token_on_behalf_of(
-                        user_assertion=app_token, scopes=self.client_obo_scope
-                    )
-                if obo_response is None:
-                    raise ValueError("Could not get OBO token.")
-
-                if "access_token" in obo_response and "expires_in" in obo_response:
-                    expires_on = datetime.datetime.now() + datetime.timedelta(
-                        seconds=int(obo_response["expires_in"])
-                    )
-                    token = AccessToken(
-                        obo_response["access_token"], int(expires_on.timestamp())
-                    )
-                    app_token = token.token
-                else:
-                    error_description = obo_response.get(
-                        "error_description", "No error description provided"
-                    )
-                    raise Exception(
-                        f"Failed to acquire token via OBO: {error_description}"
-                    )
-
-            return app_token
+        if auth_type == "obo":
+            if not user_assertion:
+                raise ValueError("user_assertion token must be provided for OBO flow.")
+            
+            c = ConfidentialClientApplication(
+            client_id=self.get_client_id(),
+            client_credential=self.client_secret,
+            authority=self.authority,
+            )
+            obo_response = c.acquire_token_on_behalf_of(
+                user_assertion=user_assertion,
+                scopes=scopes,
+            )
+            if obo_response is None or "access_token" not in obo_response:
+                raise ValueError(f"Failed to acquire OBO token: {obo_response.get('error_description', obo_response.get('error'))}")
+            
+            return obo_response["access_token"]
+    
         elif auth_type == "public_app":
             return self.get_public_app_token(scope=scopes)
 
@@ -224,22 +216,3 @@ class Authenticator:
             username=username,
         )
         return auth.token  # type: ignore
-    
-    def get_context_token(headers: dict) -> str:
-        """
-        Extracts Bearer token from headers.
-        
-        Args:
-            headers (dict): A dictionary of headers with string keys and values.
-        
-        Returns:
-            str: The Bearer token (user_assertion).
-        """
-        auth_header = headers.get("Authorization") or headers.get("authorization")
-        if not auth_header:
-            raise ValueError("Authorization header missing")
-
-        if not auth_header.lower().startswith("bearer "):
-            raise ValueError("Authorization header must start with 'Bearer '")
-
-        return auth_header[7:].strip()
