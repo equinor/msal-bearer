@@ -1,7 +1,7 @@
 # msal-bearer [![SNYK dependency check](https://github.com/equinor/msal-bearer/actions/workflows/snyk.yml/badge.svg)](https://github.com/equinor/msal-bearer/actions/workflows/snyk.yml)
 Python package to get authorization token interactively for a msal public client application supporting local cache and refreshing the token.
 
-## Usage
+## Usage 1: user impersonation
 
 
 ````
@@ -26,6 +26,12 @@ response = client.get("https://www.example.com/", auth=auth)
 
 ````
 
+## Usage 2: Obtain user_assertion for OBO authentication on streamlit
+
+````
+user_assertion = st.context.headers["X-Auth-Request-Access-Token"]
+
+````
 
 ## Installing
 Clone and install using poetry or install from pypi using pip. 
