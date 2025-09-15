@@ -1,5 +1,3 @@
-import datetime
-from azure.core.credentials import AccessToken
 from azure.identity import DefaultAzureCredential
 from typing import List, Literal, Optional, Union
 
