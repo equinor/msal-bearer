@@ -112,8 +112,7 @@ class Authenticator:
         # https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.defaultazurecredential?view=azure-python
         return "azure"
 
-    def get_token(
-        self, scopes: Optional[List[str]] = None) -> str:
+    def get_token(self, scopes: Optional[List[str]] = None) -> str:
         """Get token for Authenticator object. Will detect the type of authentication and call submethods.
 
         Args:
@@ -152,9 +151,7 @@ class Authenticator:
                 raise ValueError(
                     f"Could not get token: {d.get('error_description', d.get('error'))}"
                 )
-
             return d["access_token"]
-
         elif auth_type == "public_app":
             return self.get_public_app_token(scope=scopes)
 
