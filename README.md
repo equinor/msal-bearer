@@ -1,18 +1,18 @@
 # msal-bearer [![SNYK dependency check](https://github.com/equinor/msal-bearer/actions/workflows/snyk.yml/badge.svg)](https://github.com/equinor/msal-bearer/actions/workflows/snyk.yml)
 Python package to get authorization token interactively for a msal public client application supporting local cache and refreshing the token.
 
-## Usage
+## Usage 1: Public client application user impersonation
 
 
 ````
 from msal_bearer import BearerAuth
 
-tenantID = "YOUR_TENANT_ID"
+tenant_id = "YOUR_TENANT_ID"
 client_id = "YOUR_CLIENT_ID"
 scope = ["YOUR_SCOPE"]
 
 auth = BearerAuth.get_auth(
-    tenantID=tenantID,
+    tenantID=tenant_id,
     clientID=client_id,
     scopes=scope
 )
@@ -26,6 +26,48 @@ response = client.get("https://www.example.com/", auth=auth)
 
 ````
 
+## Usage 2: Confidential client with secret
+
+````
+from msal_bearer import Authenticator
+
+tenant_id = "YOUR_TENANT_ID"
+client_id = "YOUR_CLIENT_ID"
+client_secret = "YOUR_CLIENT_SECRET"
+scope = ["YOUR_SCOPE"]
+
+user_assertion = st.context.headers["X-Auth-Request-Access-Token"]
+
+a = Authenticator(
+    tenant_id=tenant_id
+    client_id=client_id,
+    client_secret=client_secret,
+)
+token = a.get_token(scopes=scope)
+
+````
+
+## Usage 2: Confidential client with user_assertion for OBO authentication on streamlit
+
+````
+from msal_bearer import Authenticator
+
+tenant_id = "YOUR_TENANT_ID"
+client_id = "YOUR_CLIENT_ID"
+client_secret = "YOUR_CLIENT_SECRET"
+scope = ["YOUR_SCOPE"]
+
+user_assertion = st.context.headers["X-Auth-Request-Access-Token"]
+
+a = Authenticator(
+    tenant_id=tenant_id
+    client_id=client_id,
+    client_secret=client_secret,
+    user_assertion=user_assertion,
+)
+token = a.get_token(scopes=scope)
+
+````
 
 ## Installing
 Clone and install using poetry or install from pypi using pip. 

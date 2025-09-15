@@ -24,6 +24,7 @@ class Authenticator:
         redirect_uri: Optional[str] = None,
         scopes: Optional[Union[str, List[str]]] = None,
         user_name: Optional[str] = None,
+        user_assertion: Optional[str] = None,
     ):
         """Initializer for Authenticator class.
 
@@ -35,6 +36,7 @@ class Authenticator:
             redirect_uri (Optional[str], optional): _description_. Defaults to None.
             scopes (Optional[Union[str, List[str]]], optional): Scopes to fetch token for. Defaults to None, which will convert to client_id/.default.
             user_name (Optional[str], optional): User name used for hinting during interactive login and checking for cache. Defaults to None.
+            user_assertion (Optional[str]): User assertion token used for on-behalf-of flow. Defaults to not set.
         """
         self.tenant_id = tenant_id
         if client_id is not None:
@@ -58,6 +60,8 @@ class Authenticator:
             self.set_scope(scopes)
         else:
             self.scopes = []
+
+        self.user_assertion = user_assertion
 
     def set_client_id(self, client_id: str) -> None:
         self.client_id = client_id
@@ -90,12 +94,15 @@ class Authenticator:
 
     def get_auth_type(
         self,
-    ) -> Literal["preset", "client_secret", "public_app", "azure"]:
+    ) -> Literal["preset", "client_secret", "obo", "public_app", "azure"]:
         if self.token:
             return "preset"
         elif self.client_id:
             if self.client_secret:
-                return "client_secret"
+                if self.user_assertion:
+                    return "obo"
+                else:
+                    return "client_secret"
             else:
                 return "public_app"
 
@@ -122,13 +129,20 @@ class Authenticator:
         if scopes is None or len(scopes) == 0:
             scopes = self.get_scope()
 
-        if auth_type == "client_secret":
+        if auth_type in ["client_secret", "obo"]:
             c = ConfidentialClientApplication(
                 client_id=self.get_client_id(),
                 client_credential=self.client_secret,
                 authority=self.authority,
             )
-            d = c.acquire_token_for_client(scopes=scopes)
+
+            if auth_type == "client_secret":
+                d = c.acquire_token_for_client(scopes=scopes)
+            elif auth_type == "obo":
+                d = c.acquire_token_on_behalf_of(
+                    user_assertion=self.user_assertion,
+                    scopes=scopes,
+                )
             if d is None:
                 raise ValueError("Could not get token.")
             if "access_token" not in d:
