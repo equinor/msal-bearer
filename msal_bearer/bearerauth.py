@@ -222,7 +222,7 @@ class BearerAuth:
 
         if result is None or (
             isinstance(result, dict)
-            and "error_codes" in result.keys()
+            and "error_codes" in result
             and 50173 in result["error_codes"]
         ):
             # Try to get a new Access Token using the Interactive Flow
@@ -235,7 +235,7 @@ class BearerAuth:
         if (
             result
             and isinstance(result, dict)
-            and "access_token" in result.keys()
+            and "access_token" in result
             and result["access_token"]
         ):
             if verbose:
