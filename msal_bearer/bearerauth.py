@@ -296,7 +296,18 @@ class BearerAuth:
                 print(
                     "Interactive Authentication required to obtain a new Access Token."
                 )
-            result = app.acquire_token_interactive(scopes=scopes, domain_hint=tenantID)
+            try:
+                result = app.acquire_token_interactive(
+                    scopes=scopes, domain_hint=tenantID
+                )
+            except OSError:
+                if os.path.isfile(get_token_location()):
+                    os.remove(get_token_location())
+                    result = app.acquire_token_interactive(
+                        scopes=scopes, domain_hint=tenantID
+                    )
+                else:
+                    raise
 
         if (
             result
