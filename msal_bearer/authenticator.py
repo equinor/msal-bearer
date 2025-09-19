@@ -103,7 +103,7 @@ class Authenticator:
                     return "obo"
                 else:
                     return "client_secret"
-            else:
+            elif self.tenant_id:
                 return "public_app"
 
         # Not found, will try defaultazurecredentials,
