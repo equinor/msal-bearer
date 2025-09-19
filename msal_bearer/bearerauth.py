@@ -154,13 +154,23 @@ def get_interactive_browser_credential(
     client_id: Optional[str] = None,
     auth_location: Optional[str] = None,
 ) -> InteractiveBrowserCredential:
+    """Return InteractiveBrowserCredential that will persist token cache.
+
+    Args:
+        tenant_id (Optional[str], optional): Tenant id. Defaults to None.
+        client_id (Optional[str], optional): Tenant. Defaults to None.
+        auth_location (Optional[str], optional): _description_. Defaults to None, which will convert to f"{name}_auth.json" or "msal-bearer_auth.json" if client_id is not set.
+
+    Returns:
+        InteractiveBrowserCredential: Credential used to get token.
+    """
     if client_id:
         name = client_id
     else:
         name = "msal-bearer"
 
     if auth_location is None:
-        auth_location = name + "_auth.json"
+        auth_location = f"{name}_auth.json"
 
     cache_options = TokenCachePersistenceOptions(name=name)
 
