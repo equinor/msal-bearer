@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "msal-bearer"
-version = "1.4.1"
+version = "1.4.2"
 description = "Python package to get auth token for a msal client application using msal, msal-extensions and azure-identity."
 authors = ["Åsmund Våge Fannemel <asmf@equinor.com>"]
 license = "MIT"
