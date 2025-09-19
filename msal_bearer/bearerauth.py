@@ -1,7 +1,5 @@
 import os
-import json
 from typing import List, Optional, Union
-
 import msal
 from azure.identity import (
     InteractiveBrowserCredential,
@@ -174,25 +172,10 @@ def get_interactive_browser_credential(
 
     cache_options = TokenCachePersistenceOptions(name=name)
 
-    if not os.path.isfile(auth_location):
-        if client_id is None:
-            credential = InteractiveBrowserCredential(
-                tenant_id=tenant_id, cache_persistence_options=cache_options
-            )
-        else:
-            credential = InteractiveBrowserCredential(
-                tenant_id=tenant_id,
-                client_id=client_id,
-                cache_persistence_options=cache_options,
-            )
-        record = credential.authenticate()
-        json_record = record.serialize()
-        with open(auth_location, "w") as f:
-            f.write(json_record)
-    else:
+    if os.path.isfile(auth_location):
         try:
             with open(auth_location, "r") as f:
-                json_str = f.read()
+                auth_record = f.read()
         except Exception as e:
             print(
                 f"Failed reading authentication record from {auth_location} due to {e}"
@@ -206,8 +189,22 @@ def get_interactive_browser_credential(
             tenant_id=tenant_id,
             client_id=client_id,  # nb! authentication_record contains client_id and will override this
             cache_persistence_options=TokenCachePersistenceOptions(),
-            authentication_record=AuthenticationRecord.deserialize(json_str),
+            authentication_record=AuthenticationRecord.deserialize(auth_record),
         )
+    else:
+        if client_id is None:
+            credential = InteractiveBrowserCredential(
+                tenant_id=tenant_id, cache_persistence_options=cache_options
+            )
+        else:
+            credential = InteractiveBrowserCredential(
+                tenant_id=tenant_id,
+                client_id=client_id,
+                cache_persistence_options=cache_options,
+            )
+        auth_record = credential.authenticate()
+        with open(auth_location, "w") as f:
+            f.write(auth_record.serialize())
 
     return credential
 
