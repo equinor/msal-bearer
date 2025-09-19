@@ -1,7 +1,13 @@
 import os
+import json
 from typing import List, Optional, Union
 
 import msal
+from azure.identity import (
+    InteractiveBrowserCredential,
+    TokenCachePersistenceOptions,
+    AuthenticationRecord,
+)
 from msal_extensions import (
     build_encrypted_persistence,
     FilePersistence,
@@ -141,6 +147,69 @@ def get_tenant_authority(tenant_id: str) -> str:
         str: Authority url.
     """
     return f"https://login.microsoftonline.com/{tenant_id}"
+
+
+def get_interactive_browser_credential(
+    tenant_id: Optional[str] = None,
+    client_id: Optional[str] = None,
+    auth_location: Optional[str] = None,
+) -> InteractiveBrowserCredential:
+    """Return InteractiveBrowserCredential that will persist token cache.
+
+    Args:
+        tenant_id (Optional[str], optional): Tenant id. Defaults to None.
+        client_id (Optional[str], optional): Tenant. Defaults to None.
+        auth_location (Optional[str], optional): _description_. Defaults to None, which will convert to f"{name}_auth.json" or "msal-bearer_auth.json" if client_id is not set.
+
+    Returns:
+        InteractiveBrowserCredential: Credential used to get token.
+    """
+    if client_id:
+        name = client_id
+    else:
+        name = "msal-bearer"
+
+    if auth_location is None:
+        auth_location = f"{name}_auth.json"
+
+    cache_options = TokenCachePersistenceOptions(name=name)
+
+    if not os.path.isfile(auth_location):
+        if client_id is None:
+            credential = InteractiveBrowserCredential(
+                tenant_id=tenant_id, cache_persistence_options=cache_options
+            )
+        else:
+            credential = InteractiveBrowserCredential(
+                tenant_id=tenant_id,
+                client_id=client_id,
+                cache_persistence_options=cache_options,
+            )
+        record = credential.authenticate()
+        json_record = record.serialize()
+        with open(auth_location, "w") as f:
+            f.write(json_record)
+    else:
+        try:
+            with open(auth_location, "r") as f:
+                json_str = f.read()
+        except Exception as e:
+            print(
+                f"Failed reading authentication record from {auth_location} due to {e}"
+            )
+            os.remove(auth_location)
+            return get_interactive_browser_credential(
+                tenant_id=tenant_id, client_id=client_id, auth_location=auth_location
+            )
+
+        credential = InteractiveBrowserCredential(
+            tenant_id=tenant_id,
+            client_id=client_id,  # nb! authentication_record contains client_id and will override this
+            cache_persistence_options=TokenCachePersistenceOptions(),
+            authentication_record=AuthenticationRecord.deserialize(json_str),
+        )
+
+    return credential
 
 
 class BearerAuth:
