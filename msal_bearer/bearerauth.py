@@ -297,10 +297,17 @@ class BearerAuth:
                     "Interactive Authentication required to obtain a new Access Token."
                 )
             try:
-                result = app.acquire_token_interactive(scopes=scopes, domain_hint=tenantID)
+                result = app.acquire_token_interactive(
+                    scopes=scopes, domain_hint=tenantID
+                )
             except OSError:
-                os.remove(get_token_location())
-                result = app.acquire_token_interactive(scopes=scopes, domain_hint=tenantID)
+                if os.path.isfile(get_token_location()):
+                    os.remove(get_token_location())
+                    result = app.acquire_token_interactive(
+                        scopes=scopes, domain_hint=tenantID
+                    )
+                else:
+                    raise
 
         if (
             result
