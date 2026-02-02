@@ -58,7 +58,7 @@ client_id = "YOUR_CLIENT_ID"
 client_secret = "YOUR_CLIENT_SECRET"
 scope = ["YOUR_SCOPE"]
 
-user_assertion = st.context.headers["X-Auth-Request-Access-Token"]
+user_assertion = st.context.headers["X-Forwarded-Access-Token"]
 
 a = Authenticator(
     tenant_id=tenant_id
