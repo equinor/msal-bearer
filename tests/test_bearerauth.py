@@ -71,8 +71,8 @@ def test_get_tenant_authority() -> None:
     )
 
 
-def test_bearerauth_init_accepts_token_dict_with_access_result() -> None:
-    auth = bearerauth.BearerAuth({"access_result": "abc123"})
+def test_bearerauth_init_accepts_token_dict_with_access_token() -> None:
+    auth = bearerauth.BearerAuth({"access_token": "abc123"})
 
     assert auth.token == "abc123"
 
@@ -83,12 +83,12 @@ def test_bearerauth_init_keeps_string_token() -> None:
     assert auth.token == "plain-token"
 
 
-def test_bearerauth_init_rejects_dict_without_access_result() -> None:
-    token_dict = {"access_token": "abc123", "expires_in": 3600}
+def test_bearerauth_init_rejects_dict_without_access_token() -> None:
+    token_dict = {"access_result": "abc123", "expires_in": 3600}
 
     with pytest.raises(
         ValueError,
-        match="Token must be a string or a dict with key 'access_result'",
+        match="Token must be a string or a dict with key 'access_token'",
     ):
         bearerauth.BearerAuth(token_dict)
 

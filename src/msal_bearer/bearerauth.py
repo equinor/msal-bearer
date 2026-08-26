@@ -216,12 +216,12 @@ class BearerAuth:
     """
 
     def __init__(self, token: Union[dict, str]):
-        if isinstance(token, dict) and "access_result" in token:
-            token = token["access_result"]
+        if isinstance(token, dict) and "access_token" in token:
+            token = token["access_token"]
 
         if not isinstance(token, str):
             raise ValueError(
-                "Token must be a string or a dict with key 'access_result'."
+                "Token must be a string or a dict with key 'access_token'."
             )
         self._token = token
 
