@@ -1,6 +1,6 @@
 [project]
 name = "msal-bearer"
-version = "1.5.0"
+version = "1.5.1"
 description = "Python package to get auth token for a msal client application using msal, msal-extensions and azure-identity."
 authors = [{ name = "Åsmund Våge Fannemel", email = "asmf@equinor.com" }]
 requires-python = ">=3.9.2,<4"
@@ -9,6 +9,7 @@ license = "MIT"
 classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -32,5 +33,5 @@ dev = ["black>=25.10.0,<26", "pytest>=8.4.2,<9", "pytest-cov>=7.1.0,<8"]
 default-groups = "all"
 
 [build-system]
-requires = ["uv_build>=0.11.16,<0.12"]
+requires = ["uv_build>=0.11.16,<0.13"]
 build-backend = "uv_build"
