@@ -92,7 +92,7 @@ class Authenticator:
     @token.setter
     def token(self, token: str) -> None:
         if not isinstance(token, str):
-            raise ValueError("Token must be a string.")
+            raise TypeError("Token must be a string.")
         self._token = token
 
     @property

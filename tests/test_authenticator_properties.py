@@ -49,7 +49,7 @@ def test_scopes_property_defaults_to_client_default() -> None:
 def test_token_property_rejects_non_string() -> None:
     auth = Authenticator()
 
-    with pytest.raises(ValueError, match="Token must be a string"):
+    with pytest.raises(TypeError, match="Token must be a string"):
         auth.token = None  # type: ignore[assignment]
 
 
