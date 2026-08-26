@@ -155,9 +155,9 @@ def get_interactive_browser_credential(
     """Return InteractiveBrowserCredential that will persist token cache.
 
     Args:
-        tenant_id (Optional[str], optional): Tenant id. Defaults to None.
-        client_id (Optional[str], optional): Tenant. Defaults to None.
-        auth_location (Optional[str], optional): _description_. Defaults to None, which will convert to f"{name}_auth.json" or "msal-bearer_auth.json" if client_id is not set.
+        tenant_id (Optional[str], optional): Azure tenant id. Defaults to None.
+        client_id (Optional[str], optional): Azure client id. Defaults to None.
+        auth_location (Optional[str], optional): Path to the persisted authentication record. Defaults to None, which will convert to f"{name}_auth.json" or "msal-bearer_auth.json" if client_id is not set.
 
     Returns:
         InteractiveBrowserCredential: Credential used to get token.

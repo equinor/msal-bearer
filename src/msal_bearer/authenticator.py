@@ -32,10 +32,10 @@ class Authenticator:
 
         Args:
             tenant_id (Optional[str], optional): Azure tenant id. Defaults to None.
-            client_id (Optional[str], optional): _description_. Defaults to None.
-            client_secret (Optional[str], optional): _description_. Defaults to None.
-            authority (Optional[str], optional): _description_. Defaults to None, which converts to f"https://login.microsoftonline.com/{tenant_id}".
-            redirect_uri (Optional[str], optional): _description_. Defaults to None.
+            client_id (Optional[str], optional): Azure client id. Defaults to None.
+            client_secret (Optional[str], optional): Azure client secret for confidential client flows. Defaults to None.
+            authority (Optional[str], optional): Authority url to authenticate against. Defaults to None, which converts to f"https://login.microsoftonline.com/{tenant_id}".
+            redirect_uri (Optional[str], optional): Redirect uri for interactive login. Defaults to None.
             scopes (Optional[Union[str, List[str]]], optional): Scopes to fetch token for. Defaults to None, which will convert to client_id/.default.
             user_name (Optional[str], optional): User name used for hinting during interactive login and checking for cache. Defaults to None.
             user_assertion (Optional[str]): User assertion token used for on-behalf-of flow. Defaults to not set.
