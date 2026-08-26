@@ -122,11 +122,8 @@ def get_app_with_cache(client_id, authority: str, token_location: str = ""):
 
     try:
         persistence = build_encrypted_persistence(get_token_location())
-    except ImportError:
-        # Handle linux case of missing gi library
-        persistence = FilePersistence(get_token_location())
-    except RuntimeError:
-        # Handle linux case of missing gi library
+    except (ImportError, RuntimeError):
+        # Handle linux case of missing gi library (ImportError)
         persistence = FilePersistence(get_token_location())
 
     cache = PersistedTokenCache(persistence)
