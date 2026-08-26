@@ -6,6 +6,8 @@ For public client application using user impersonation it also handles local cac
 
 
 ````
+import requests
+import httpx
 from msal_bearer import BearerAuth
 
 tenant_id = "YOUR_TENANT_ID"
@@ -46,7 +48,7 @@ token = a.get_token(scopes=scope)
 
 ````
 
-## Usage 2: Confidential client with user_assertion for OBO authentication on streamlit
+## Usage 3: Confidential client with user_assertion for OBO authentication on streamlit
 
 ````
 from msal_bearer import Authenticator
@@ -69,7 +71,7 @@ token = a.get_token(scopes=scope)
 ````
 
 ## Installing
-Clone and install using poetry or install from pypi using pip. 
+Clone and install using uv or install from pypi using pip. 
 
 ````
 pip install msal_bearer
